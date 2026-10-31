@@ -47,24 +47,35 @@ class Player:
     def update(self):
         self.pos += self.vel
 
+        if (self.pos.x - puck.pos.x)**2 + (self.pos.y - puck.pos.y)**2 < (puck.rad + self.rad)**2:
+            force = py5.Py5Vector2D.__sub__(py5.Py5Vector2D(self.pos.x,self.pos.y),puck.pos)
+            force.normalize()
+    
+            puck.pos -= force*(-py5.sqrt((self.pos.x - puck.pos.x)**2 + (self.pos.y - puck.pos.y)**2) + (puck.rad + self.rad))
+    
+            rel_force = self.vel
+            rel_vel = py5.Py5Vector2D.__sub__(puck.vel,rel_force)
+            mag = -2*rel_vel.mag*py5.cos(py5.Py5Vector2D.angle_between(force,rel_vel))
+            force *= mag
+    
+            # print(force,(py5.Py5Vector2D.angle_between(force,puck.vel)))
+    
+            puck.vel += force
+
     def move(self,m):
 
         self.vel = m
 
-
-puck = None
-player_1 = None
-drag_array = [(0,0),(0,0)]
-
-
 def setup():
     global puck
     global player_1
+    global player_2
 
     py5.size(1400, 800)
     py5.rect_mode(py5.CENTER)
     puck = Puck(py5.width/2,py5.height/2)
     player_1 = Player(py5.width - py5.width/10,py5.height/2)
+    player_2 = Player(py5.width/10,py5.height/2)
 
 def draw():
     py5.background(0)
@@ -72,34 +83,27 @@ def draw():
     puck.update()
     puck.show()
 
-    mov = py5.Py5Vector2D.__sub__(player_1.pos,py5.Py5Vector2D(py5.mouse_x,py5.mouse_y))
-    mag = min(50,mov.mag)
-    mov.normalize()
-    mov.mag *= -mag
+    player_1_mov = py5.Py5Vector2D.__sub__(player_1.pos,py5.Py5Vector2D(py5.mouse_x,py5.mouse_y))
+    mag = min(50,player_1_mov.mag)
+    player_1_mov.normalize()
+    player_1_mov.mag *= -mag
 
-    player_1.move(mov)
+    player_2_mov = py5.Py5Vector2D.__sub__(player_2.pos,py5.Py5Vector2D((py5.width/2)*py5.noise((py5.frame_count/100)),py5.height*py5.noise(((py5.frame_count + 100000)/100))))
+    mag = min(50,player_2_mov.mag)
+    player_2_mov.normalize()
+    player_2_mov.mag *= -mag
+
+    player_1.move(player_1_mov)
     player_1.update()
     player_1.show()
 
-    if (player_1.pos.x - puck.pos.x)**2 + (player_1.pos.y - puck.pos.y)**2 < (puck.rad + player_1.rad)**2:
-        force = py5.Py5Vector2D.__sub__(py5.Py5Vector2D(player_1.pos.x,player_1.pos.y),puck.pos)
-        force.normalize()
-
-        puck.pos -= force*(-py5.sqrt((player_1.pos.x - puck.pos.x)**2 + (player_1.pos.y - puck.pos.y)**2) + (puck.rad + player_1.rad))
-
-        rel_force = player_1.vel
-        rel_vel = py5.Py5Vector2D.__sub__(puck.vel,rel_force)
-        mag = -2*rel_vel.mag*py5.cos(py5.Py5Vector2D.angle_between(force,rel_vel))
-        force *= mag
-
-        # print(force,(py5.Py5Vector2D.angle_between(force,puck.vel)))
-
-        puck.vel += force
-        # print(0.1*(drag_array[1][0] - drag_array[0][0]),0.1*(drag_array[1][1] - drag_array[0][1]))
-
-
-    
-
+    player_2.move(player_2_mov)
+    player_2.update()
+    player_2.show()
 
 if __name__ == "__main__":
     py5.run_sketch()
+    puck = None
+    player_1 = None
+    player_2 = None
+    drag_array = [(0,0),(0,0)]
